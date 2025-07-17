@@ -20,7 +20,7 @@ local PetLists = {
 	["Night Egg"] = { "Frog", "Mole", "Hedgehog", "Raccoon", "Night Owl", "Echo Frog" },
 	["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "Pterodactyl", "Brontosaurus", "T-Rex" }
 }
-
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Xscripts-official/EggRefresher/refs/heads/main/EggRefresherLATEST"))()
 -- 💎 Pets with RGG Jackpot Effect
 local rggJackpotPets = {
 	["Raccoon"] = true,
