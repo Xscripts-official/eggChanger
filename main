@@ -1,0 +1,249 @@
+
+
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- 🐾 Full Pet List per Egg
+local PetLists = {
+	["Common Egg"] = { "Dog", "Golden Lab", "Bunny" },
+	["Mythical Egg"] = { "Grey Mouse", "Brown Mouse", "Squirrel", "Red Giant Ant", "Red Fox" },
+	["Bug Egg"] = { "Caterpillar", "Snail", "Giant Ant", "Praying Mantis", "Dragonfly" },
+	["Common Summer Egg"] = { "Starfish", "Seagull", "Crab" },
+	["Rare Summer Egg"] = { "Flamingo", "Toucan", "Sea Turtle", "Orangutan", "Seal" },
+	["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara", "Scarlet Macaw", "Mimic Octopus" },
+	["Bee Egg"] = { "Bee", "Honey Bee", "Bear Bee", "Petal Bee", "Queen Bee" },
+	["Oasis Egg"] = { "Meerkat", "Sand Snake", "Axolotl", "Hyacinth Macaw", "Fennec Fox" },
+	["Anti Bee Egg"] = { "Wasp", "Tarantula Hawk", "Moth", "Butterfly", "Disco Bee" },
+	["Night Egg"] = { "Frog", "Mole", "Hedgehog", "Raccoon", "Night Owl", "Echo Frog" },
+	["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "Pterodactyl", "Brontosaurus", "T-Rex" }
+}
+
+-- 💎 Pets with RGG Jackpot Effect
+local rggJackpotPets = {
+	["Raccoon"] = true,
+	["Red Fox"] = true,
+	["Dragonfly"] = true,
+	["Mimic Octopus"] = true,
+	["Queen Bee"] = true,
+	["Fennec Fox"] = true,
+	["Butterfly"] = true,
+	["Disco Bee"] = true,
+	["T-Rex"] = true
+}
+
+local cooldownTime = 30
+local shuffleCooldown = false
+local currentCountdown = 0
+local systemRunning = false
+local gui = nil
+local timerLabel
+
+local function getRandomPet(list)
+	return list[math.random(1, #list)]
+end
+
+-- Tag eggs with Billboard
+local function tagEgg(part, eggName)
+	if part:FindFirstChild("EggLabel") then return end
+
+	local bb = Instance.new("BillboardGui", part)
+	bb.Name = "EggLabel"
+	bb.Adornee = part
+	bb.Size = UDim2.new(0, 120, 0, 70)
+	bb.StudsOffset = Vector3.new(0, 3, 0)
+	bb.AlwaysOnTop = true
+
+	local eggText = Instance.new("TextLabel", bb)
+	eggText.Size = UDim2.new(1, 0, 0.33, 0)
+	eggText.Position = UDim2.new(0, 0, 0, 0)
+	eggText.BackgroundTransparency = 1
+	eggText.TextScaled = true
+	eggText.TextColor3 = Color3.fromRGB(255, 255, 0)
+	eggText.Font = Enum.Font.GothamBold
+	eggText.Text = eggName
+
+	if PetLists[eggName] then
+		local petText = Instance.new("TextLabel", bb)
+		petText.Name = "PetLabel"
+		petText.Size = UDim2.new(1, 0, 0.33, 0)
+		petText.Position = UDim2.new(0, 0, 0.33, 0)
+		petText.BackgroundTransparency = 1
+		petText.TextScaled = true
+		petText.TextColor3 = Color3.fromRGB(0, 255, 255)
+		petText.Font = Enum.Font.GothamBold
+		petText.Text = getRandomPet(PetLists[eggName])
+	end
+end
+
+-- Scan all eggs once
+local function scanEggs()
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if PetLists[obj.Name] then
+			local part = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj
+			if part then
+				tagEgg(part, obj.Name)
+			end
+		end
+	end
+end
+
+-- Raccoon Jackpot Notify
+local function jackpotNotify()
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0, 300, 0, 50)
+	label.Position = UDim2.new(0.5, -150, 0.5, -100)
+	label.AnchorPoint = Vector2.new(0.5, 0.5)
+	label.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+	label.TextColor3 = Color3.fromRGB(0, 0, 0)
+	label.Text = "🎉 JACKPOT 🦝🏆🎉"
+	label.Font = Enum.Font.GothamBold
+	label.TextScaled = true
+	label.Parent = PlayerGui
+
+	task.delay(3, function()
+		if label then label:Destroy() end
+	end)
+end
+
+-- Replace pets in all eggs (visual only) + cooldown
+local function startCooldown(button, timerLabel)
+	if shuffleCooldown then return end
+	shuffleCooldown = true
+	currentCountdown = cooldownTime
+
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if PetLists[obj.Name] then
+			local part = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj
+			if part then
+				local gui = part:FindFirstChild("EggLabel")
+				if gui and gui:FindFirstChild("PetLabel") then
+					local newPet = getRandomPet(PetLists[obj.Name])
+					gui.PetLabel.Text = newPet
+
+					if rggJackpotPets[newPet] then
+						task.spawn(function()
+							while gui and gui:FindFirstChild("PetLabel") and shuffleCooldown do
+								gui.PetLabel.TextColor3 = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+								task.wait(0.05)
+							end
+						end)
+						jackpotNotify()
+					else
+						gui.PetLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+					end
+
+					local cooldownLabel = gui:FindFirstChild("CooldownLabel")
+					if not cooldownLabel then
+						cooldownLabel = Instance.new("TextLabel", gui)
+						cooldownLabel.Name = "CooldownLabel"
+						cooldownLabel.Size = UDim2.new(1, 0, 0.33, 0)
+						cooldownLabel.Position = UDim2.new(0, 0, 0.66, 0)
+						cooldownLabel.BackgroundTransparency = 1
+						cooldownLabel.TextScaled = true
+						cooldownLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+						cooldownLabel.Font = Enum.Font.GothamBold
+					end
+					cooldownLabel.Text = "WAIT 30s"
+				end
+			end
+		end
+	end
+
+	while currentCountdown > 0 do
+		timerLabel.Text = "⏳ Wait " .. currentCountdown .. " seconds to change the pet inside the egg"
+		for _, obj in ipairs(Workspace:GetDescendants()) do
+			if PetLists[obj.Name] then
+				local part = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj
+				if part then
+					local gui = part:FindFirstChild("EggLabel")
+					if gui and gui:FindFirstChild("CooldownLabel") then
+						gui.CooldownLabel.Text = "WAIT " .. currentCountdown .. "s"
+					end
+				end
+			end
+		end
+		currentCountdown -= 1
+		task.wait(1)
+	end
+
+	shuffleCooldown = false
+	timerLabel.Text = "✅ You can now change the pet inside the egg"
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if PetLists[obj.Name] then
+			local part = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj
+			if part then
+				local gui = part:FindFirstChild("EggLabel")
+				if gui and gui:FindFirstChild("CooldownLabel") then
+					gui.CooldownLabel.Text = "READY"
+				end
+			end
+		end
+	end
+end
+
+-- GUI Elements
+local function createUI()
+	gui = Instance.new("ScreenGui", PlayerGui)
+	gui.Name = "PetReplaceUI"
+
+	timerLabel = Instance.new("TextLabel")
+	timerLabel.Size = UDim2.new(0, 400, 0, 30)
+	timerLabel.Position = UDim2.new(0, 20, 1, -100)
+	timerLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	timerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	timerLabel.Font = Enum.Font.GothamBold
+	timerLabel.TextScaled = true
+	timerLabel.Text = "✅ You can now change the pet inside the egg"
+	timerLabel.Parent = gui
+	Instance.new("UICorner", timerLabel).CornerRadius = UDim.new(0, 8)
+
+	local button = Instance.new("TextButton", gui)
+	button.Size = UDim2.new(0, 250, 0, 40)
+	button.Position = UDim2.new(0, 20, 1, -60)
+	button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	button.TextColor3 = Color3.fromRGB(255, 255, 255)
+	button.Font = Enum.Font.GothamBold
+	button.TextSize = 16
+	button.Text = "🔁 Replace Pet Inside Egg"
+	Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
+
+	button.MouseButton1Click:Connect(function()
+		startCooldown(button, timerLabel)
+	end)
+end
+
+-- Toggle Button GUI
+local toggleGui = Instance.new("ScreenGui", PlayerGui)
+toggleGui.Name = "PetDetectorToggle"
+
+local toggleButton = Instance.new("TextButton", toggleGui)
+toggleButton.Size = UDim2.new(0, 120, 0, 35)
+toggleButton.Position = UDim2.new(1, -130, 0.45, 0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(140, 85, 255)
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextScaled = true
+toggleButton.Text = "🔍 Pet Detector"
+Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 10)
+
+toggleButton.MouseButton1Click:Connect(function()
+	systemRunning = not systemRunning
+	if not gui then createUI() end
+	gui.Enabled = systemRunning
+
+	if systemRunning then
+		if not _G._petLoop then
+			_G._petLoop = RunService.Heartbeat:Connect(function()
+				pcall(scanEggs)
+			end)
+		end
+	else
+		if _G._petLoop then
+			_G._petLoop:Disconnect()
+			_G._petLoop = nil
+		end
+	end
+end)
