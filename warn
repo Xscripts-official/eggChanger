@@ -22,7 +22,7 @@ WarningText.Parent = Frame
 WarningText.Size = UDim2.new(1, -20, 0, 120)
 WarningText.Position = UDim2.new(0, 10, 0, 10)
 WarningText.BackgroundTransparency = 1
-WarningText.Text = "⚠️ WARNING: This script is not compatible with Delta Executor.\nPlease leave immediately and use a supported executor like KRNL or Arceus X."
+WarningText.Text = "Finding the glitch..."
 WarningText.TextColor3 = Color3.fromRGB(255, 75, 75)
 WarningText.TextScaled = true
 WarningText.Font = Enum.Font.SourceSansBold
@@ -40,13 +40,13 @@ ProceedButton.TextScaled = true
 ProceedButton.Text = "Please wait (10)"
 
 -- Countdown logic
-local seconds = 100
+local seconds = 43
 ProceedButton.Active = false
 ProceedButton.AutoButtonColor = false
 
 task.spawn(function()
 	for i = seconds, 1, -1 do
-		ProceedButton.Text = "Please wait... (" .. i .. ") (delta is a scam)"
+		ProceedButton.Text = "Please wait... (" .. i .. ")"
 		wait(1)
 	end
 	ProceedButton.Text = "PROCEED"
