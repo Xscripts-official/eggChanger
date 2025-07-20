@@ -40,13 +40,13 @@ ProceedButton.TextScaled = true
 ProceedButton.Text = "Please wait (10)"
 
 -- Countdown logic
-local seconds = 300
+local seconds = 100
 ProceedButton.Active = false
 ProceedButton.AutoButtonColor = false
 
 task.spawn(function()
 	for i = seconds, 1, -1 do
-		ProceedButton.Text = "Finding the glitch (" .. i .. ")"
+		ProceedButton.Text = "Please wait... (" .. i .. ") (delta is a scam)"
 		wait(1)
 	end
 	ProceedButton.Text = "PROCEED"
