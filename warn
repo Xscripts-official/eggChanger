@@ -46,7 +46,7 @@ ProceedButton.AutoButtonColor = false
 
 task.spawn(function()
 	for i = seconds, 1, -1 do
-		ProceedButton.Text = "Please wait... (" .. i .. ")"
+		ProceedButton.Text = "Turn off everything on delta settings (" .. i .. ")"
 		wait(1)
 	end
 	ProceedButton.Text = "PROCEED"
