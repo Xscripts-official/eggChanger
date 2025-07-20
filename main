@@ -108,7 +108,6 @@ local function jackpotNotify()
 	end)
 end
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Xscripts-official/EggRefresher/refs/heads/main/EggRefresherLATEST"))()
 -- Replace pets in all eggs (visual only) + cooldown
 local function startCooldown(button, timerLabel)
 	if shuffleCooldown then return end
