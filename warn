@@ -1,27 +1,30 @@
--- Create ScreenGui
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Create the ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "WarningGui"
 screenGui.ResetOnSpawn = false
-screenGui.IgnoreGuiInset = true
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Create full-screen Frame
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(1, 0, 1, 0)
-frame.Position = UDim2.new(0, 0, 0, 0)
-frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-frame.BackgroundTransparency = 0.3
-frame.Parent = screenGui
+-- Create the background
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 0)
+background.Position = UDim2.new(0, 0, 0, 0)
+background.BackgroundColor3 = Color3.new(0, 0, 0) -- Black
+background.BackgroundTransparency = 0
+background.Parent = screenGui
 
--- Create TextLabel
-local label = Instance.new("TextLabel")
-label.Size = UDim2.new(1, -100, 0, 200)
-label.Position = UDim2.new(0.5, -((1 * screenGui.AbsoluteSize.X) / 2) + 50, 0.4, 0)
-label.BackgroundTransparency = 1
-label.Text = "Hoy! Off mo muna lahat sa settings ng Delta — yung anti-AFK, anti-scam, lahat 'yon."
-label.TextColor3 = Color3.fromRGB(255, 255, 255)
-label.Font = Enum.Font.SourceSansBold
-label.TextScaled = true
-label.TextWrapped = true
-label.Parent = frame
+-- Create the warning text
+local warningText = Instance.new("TextLabel")
+warningText.Size = UDim2.new(0.9, 0, 0.5, 0)
+warningText.Position = UDim2.new(0.05, 0, 0.25, 0)
+warningText.BackgroundTransparency = 1
+warningText.TextColor3 = Color3.new(1, 0, 0) -- Red
+warningText.TextStrokeTransparency = 0
+warningText.TextStrokeColor3 = Color3.new(0, 0, 0) -- Black stroke
+warningText.Font = Enum.Font.GothamBlack
+warningText.TextScaled = true
+warningText.TextWrapped = true
+warningText.Text = "⚠️ HOY! Hindi gagana 'to pag hindi mo in-off lahat sa settings ng Delta.\nClick mo muna yung Delta – ayan, yung cheat sa taas mo –\ntapos sa settings, i-OFF mo LAHAT 'yon!"
+warningText.Parent = background
