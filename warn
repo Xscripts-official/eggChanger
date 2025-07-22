@@ -39,7 +39,7 @@ local debounce = false
 
 -- Step 1: Wait 7 seconds, then update text
 task.delay(7, function()
-	label.Text = "Please turn off everything on Delta settings\nClick Delta menu -> settings logo\nAnd off everything"
+	label.Text = "Please turn off anti-afk and anti-scam to make the script work"
 	button.Visible = true
 end)
 
