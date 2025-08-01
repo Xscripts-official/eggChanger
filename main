@@ -1,0 +1,189 @@
+-- AdrianHub 🥚 Optimized Egg ESP + Pet Replace (Visual Only) + RGG Jackpot Effect 🎉
+
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Cache Eggs
+local eggCache = {}
+
+-- Pet Lists
+local PetLists = {
+    ["Common Egg"] = { "Dog", "Golden Lab", "Bunny" },
+    ["Mythical Egg"] = { "Grey Mouse", "Brown Mouse", "Squirrel", "Red Giant Ant"},
+    ["Bug Egg"] = { "Caterpillar", "Snail", "Giant Ant", "Praying Mantis"},
+    ["Common Summer Egg"] = { "Starfish", "Seagull", "Crab" },
+    ["Rare Summer Egg"] = { "Flamingo", "Toucan", "Sea Turtle", "Orangutan"},
+    ["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara", "Scarlet Macaw"},
+    ["Bee Egg"] = { "Bee", "Honey Bee", "Bear Bee", "Petal Bee", "Queen Bee" },
+    ["Oasis Egg"] = { "Meerkat", "Sand Snake", "Axolotl", "Hyacinth Macaw" },
+    ["Anti Bee Egg"] = { "Wasp", "Tarantula Hawk", "Moth", "Butterfly" },
+    ["Night Egg"] = { "Frog", "Mole", "Hedgehog", "Night Owl", "Echo Frog" },
+    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "Pterodactyl", "Brontosaurus" },
+    ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki", "Tanchozuru", "Kappa" }
+}
+
+-- Jackpot Pets
+local JackpotPets = {
+    ["Raccoon"] = true, ["Red Fox"] = true, ["Dragonfly"] = true,
+    ["Mimic Octopus"] = true, ["Queen Bee"] = true, ["Fennec Fox"] = true,
+    ["Butterfly"] = true, ["Disco Bee"] = true, ["T-Rex"] = true, ["Kitsune"] = true
+}
+
+-- Cooldown Variables
+local cooldownTime = 30
+local shuffleCooldown = false
+local currentCountdown = 0
+local systemRunning = false
+local gui = nil
+local timerLabel
+
+-- Utility
+local function getRandomPet(list)
+    return list[math.random(1, #list)]
+end
+
+-- Create Billboard once
+local function tagEgg(part, eggName)
+    if eggCache[part] then return end
+    eggCache[part] = true
+
+    local bb = Instance.new("BillboardGui", part)
+    bb.Name = "EggLabel"
+    bb.Adornee = part
+    bb.Size = UDim2.new(0, 150, 0, 80)
+    bb.StudsOffset = Vector3.new(0, 3, 0)
+    bb.AlwaysOnTop = true
+
+    local eggText = Instance.new("TextLabel", bb)
+    eggText.Size = UDim2.new(1, 0, 0.33, 0)
+    eggText.BackgroundTransparency = 1
+    eggText.TextScaled = true
+    eggText.TextColor3 = Color3.fromRGB(255, 255, 0)
+    eggText.Font = Enum.Font.FredokaOne
+    eggText.Text = eggName
+
+    local petText = Instance.new("TextLabel", bb)
+    petText.Name = "PetLabel"
+    petText.Size = UDim2.new(1, 0, 0.33, 0)
+    petText.Position = UDim2.new(0, 0, 0.33, 0)
+    petText.BackgroundTransparency = 1
+    petText.TextScaled = true
+    petText.TextColor3 = Color3.fromRGB(0, 255, 255)
+    petText.Font = Enum.Font.FredokaOne
+    petText.Text = getRandomPet(PetLists[eggName])
+end
+
+-- Scan Eggs Once
+local function scanEggs()
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and PetLists[obj.Name] then
+            local part = obj:FindFirstChildWhichIsA("BasePart")
+            if part then
+                tagEgg(part, obj.Name)
+            end
+        end
+    end
+end
+
+-- Jackpot Notify
+local function jackpotNotify()
+    local label = Instance.new("TextLabel", PlayerGui)
+    label.Size = UDim2.new(0, 350, 0, 60)
+    label.Position = UDim2.new(0.5, -175, 0.5, -120)
+    label.AnchorPoint = Vector2.new(0.5, 0.5)
+    label.BackgroundColor3 = Color3.fromRGB(255, 223, 0)
+    label.TextColor3 = Color3.new(0,0,0)
+    label.Text = "🎉 JACKPOT PET FOUND 🎉"
+    label.Font = Enum.Font.FredokaOne
+    label.TextScaled = true
+    Instance.new("UICorner", label).CornerRadius = UDim.new(0,12)
+    game:GetService("Debris"):AddItem(label, 3)
+end
+
+-- Replace Pets (Visual Only)
+local function startCooldown(button)
+    if shuffleCooldown then return end
+    shuffleCooldown = true
+    currentCountdown = cooldownTime
+
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and PetLists[obj.Name] then
+            local part = obj:FindFirstChildWhichIsA("BasePart")
+            if part then
+                local gui = part:FindFirstChild("EggLabel")
+                if gui and gui:FindFirstChild("PetLabel") then
+                    local newPet = getRandomPet(PetLists[obj.Name])
+                    gui.PetLabel.Text = newPet
+                    if JackpotPets[newPet] then
+                        jackpotNotify()
+                    else
+                        gui.PetLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+                    end
+                end
+            end
+        end
+    end
+
+    while currentCountdown > 0 do
+        timerLabel.Text = "⏳ " .. currentCountdown .. "s before you can shuffle again"
+        currentCountdown -= 1
+        task.wait(1)
+    end
+
+    shuffleCooldown = false
+    timerLabel.Text = "✅ Ready to Shuffle!"
+end
+
+-- Create Modern UI
+local function createUI()
+    gui = Instance.new("ScreenGui", PlayerGui)
+    gui.Name = "PetReplaceUI"
+
+    timerLabel = Instance.new("TextLabel", gui)
+    timerLabel.Size = UDim2.new(0, 420, 0, 40)
+    timerLabel.Position = UDim2.new(0.5, -210, 1, -100)
+    timerLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    timerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    timerLabel.Font = Enum.Font.FredokaOne
+    timerLabel.TextScaled = true
+    timerLabel.Text = "✅ Ready to Shuffle!"
+    Instance.new("UICorner", timerLabel).CornerRadius = UDim.new(0, 10)
+
+    local button = Instance.new("TextButton", gui)
+    button.Size = UDim2.new(0, 280, 0, 45)
+    button.Position = UDim2.new(0.5, -140, 1, -50)
+    button.BackgroundColor3 = Color3.fromRGB(85, 0, 255)
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.Font = Enum.Font.FredokaOne
+    button.TextScaled = true
+    button.Text = "🔁 Shuffle Pet in Egg"
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 10)
+
+    button.MouseButton1Click:Connect(function()
+        startCooldown(button)
+    end)
+end
+
+-- Toggle
+local toggleGui = Instance.new("ScreenGui", PlayerGui)
+local toggleButton = Instance.new("TextButton", toggleGui)
+toggleButton.Size = UDim2.new(0, 140, 0, 40)
+toggleButton.Position = UDim2.new(1, -160, 0.45, 0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+toggleButton.TextColor3 = Color3.new(1,1,1)
+toggleButton.Font = Enum.Font.FredokaOne
+toggleButton.TextScaled = true
+toggleButton.Text = "🐣 Pet Detector"
+Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 12)
+
+toggleButton.MouseButton1Click:Connect(function()
+    systemRunning = not systemRunning
+    if not gui then createUI() end
+    gui.Enabled = systemRunning
+    if systemRunning then
+        scanEggs()
+    end
+end)
