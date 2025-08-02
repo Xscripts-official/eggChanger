@@ -12,17 +12,17 @@ local eggCache = {}
 -- Pet Lists
 local PetLists = {
     ["Common Egg"] = { "Dog", "Golden Lab", "Bunny" },
-    ["Mythical Egg"] = { "Grey Mouse", "Brown Mouse", "Squirrel", "Red Giant Ant", "Red Fox" },
-    ["Bug Egg"] = { "Caterpillar", "Snail", "Giant Ant", "Praying Mantis", "Dragonfly" },
+    ["Mythical Egg"] = { "Grey Mouse", "Brown Mouse", "Squirrel", "Red Giant Ant" },
+    ["Bug Egg"] = { "Caterpillar", "Snail", "Giant Ant", "Praying Mantis" },
     ["Common Summer Egg"] = { "Starfish", "Seagull", "Crab" },
     ["Rare Summer Egg"] = { "Flamingo", "Toucan", "Sea Turtle", "Orangutan", "Seal" },
-    ["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara", "Scarlet Macaw", "Mimic Octopus" },
-    ["Bee Egg"] = { "Bee", "Honey Bee", "Bear Bee", "Petal Bee", "Queen Bee" },
-    ["Oasis Egg"] = { "Meerkat", "Sand Snake", "Axolotl", "Hyacinth Macaw", "Fennec Fox" },
-    ["Anti Bee Egg"] = { "Wasp", "Tarantula Hawk", "Moth", "Butterfly", "Disco Bee" },
-    ["Night Egg"] = { "Frog", "Mole", "Hedgehog", "Raccoon", "Night Owl", "Echo Frog" },
-    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "Pterodactyl", "Brontosaurus", "T-Rex" },
-    ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki", "Tanchozuru", "Kappa", "Kitsune" }
+    ["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara", "Scarlet Macaw" },
+    ["Bee Egg"] = { "Bee", "Honey Bee", "Bear Bee", "Petal Bee" },
+    ["Oasis Egg"] = { "Meerkat", "Sand Snake", "Axolotl", "Hyacinth Macaw" },
+    ["Anti Bee Egg"] = { "Wasp", "Tarantula Hawk", "Moth", "Butterfly" },
+    ["Night Egg"] = { "Frog", "Mole", "Hedgehog", "Night Owl", "Echo Frog" },
+    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "Pterodactyl", "Brontosaurus" },
+    ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki", "Tanchozuru", "Kappa" }
 }
 
 -- Jackpot Pets
