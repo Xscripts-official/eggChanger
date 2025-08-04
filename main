@@ -1,4 +1,4 @@
--- XScripts 🥚 Enhanced Egg ESP + Pet Replace + Jackpot + Sprinkler Freeze 🎉
+-- XScripts ⚡ Egg ESP + Pet Replace + Jackpot + Sprinkler Freeze
 
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -32,7 +32,7 @@ local JackpotPets = {
     ["Butterfly"] = true, ["Disco Bee"] = true, ["T-Rex"] = true, ["Kitsune"] = true
 }
 
--- Cooldown Variables
+-- Cooldown
 local cooldownTime = 30
 local shuffleCooldown = false
 local currentCountdown = 0
@@ -45,7 +45,7 @@ local function getRandomPet(list)
     return list[math.random(1, #list)]
 end
 
--- Tag Eggs
+-- Egg Tag
 local function tagEgg(part, eggName)
     if eggCache[part] then return end
     eggCache[part] = true
@@ -53,26 +53,26 @@ local function tagEgg(part, eggName)
     local bb = Instance.new("BillboardGui", part)
     bb.Name = "EggLabel"
     bb.Adornee = part
-    bb.Size = UDim2.new(0, 150, 0, 80)
+    bb.Size = UDim2.new(0, 160, 0, 70)
     bb.StudsOffset = Vector3.new(0, 3, 0)
     bb.AlwaysOnTop = true
 
     local eggText = Instance.new("TextLabel", bb)
-    eggText.Size = UDim2.new(1, 0, 0.33, 0)
+    eggText.Size = UDim2.new(1, 0, 0.5, 0)
     eggText.BackgroundTransparency = 1
     eggText.TextScaled = true
-    eggText.TextColor3 = Color3.fromRGB(255, 255, 0)
-    eggText.Font = Enum.Font.FredokaOne
+    eggText.TextColor3 = Color3.fromRGB(200, 200, 200)
+    eggText.Font = Enum.Font.SourceSansBold
     eggText.Text = eggName
 
     local petText = Instance.new("TextLabel", bb)
     petText.Name = "PetLabel"
-    petText.Size = UDim2.new(1, 0, 0.33, 0)
-    petText.Position = UDim2.new(0, 0, 0.33, 0)
+    petText.Size = UDim2.new(1, 0, 0.5, 0)
+    petText.Position = UDim2.new(0, 0, 0.5, 0)
     petText.BackgroundTransparency = 1
     petText.TextScaled = true
-    petText.TextColor3 = Color3.fromRGB(0, 255, 255)
-    petText.Font = Enum.Font.FredokaOne
+    petText.TextColor3 = Color3.fromRGB(0, 170, 255)
+    petText.Font = Enum.Font.SourceSans
     petText.Text = getRandomPet(PetLists[eggName])
 end
 
@@ -88,21 +88,149 @@ local function scanEggs()
     end
 end
 
--- Jackpot Notify
+-- Jackpot Alert
 local function jackpotNotify()
-    local label = Instance.new("TextLabel", PlayerGui)
-    label.Size = UDim2.new(0, 350, 0, 60)
-    label.Position = UDim2.new(0.5, -175, 0.5, -120)
-    label.AnchorPoint = Vector2.new(0.5, 0.5)
-    label.BackgroundColor3 = Color3.fromRGB(255, 223, 0)
-    label.TextColor3 = Color3.new(0,0,0)
-    label.Text = "🎉 JACKPOT PET FOUND 🎉"
-    label.Font = Enum.Font.FredokaOne
+    local frame = Instance.new("Frame", PlayerGui)
+    frame.Size = UDim2.new(0, 360, 0, 60)
+    frame.Position = UDim2.new(0.5, -180, 0.5, -120)
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BorderSizePixel = 0
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(255, 200, 0)
+    label.Font = Enum.Font.GothamBlack
     label.TextScaled = true
-    Instance.new("UICorner", label).CornerRadius = UDim.new(0,12)
-    game:GetService("Debris"):AddItem(label, 3)
+    label.Text = "[ JACKPOT FOUND ]"
+    game:GetService("Debris"):AddItem(frame, 3)
 end
 
+-- Shuffle Pets
+local function startCooldown()
+    if shuffleCooldown then return end
+    shuffleCooldown = true
+    currentCountdown = cooldownTime
+
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and PetLists[obj.Name] then
+            local part = obj:FindFirstChildWhichIsA("BasePart")
+            if part then
+                local gui = part:FindFirstChild("EggLabel")
+                if gui and gui:FindFirstChild("PetLabel") then
+                    local newPet = getRandomPet(PetLists[obj.Name])
+                    gui.PetLabel.Text = newPet
+                    if JackpotPets[newPet] then
+                        jackpotNotify()
+                        gui.PetLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+                    else
+                        gui.PetLabel.TextColor3 = Color3.fromRGB(0, 170, 255)
+                    end
+                end
+            end
+        end
+    end
+
+    while currentCountdown > 0 do
+        timerLabel.Text = "⏳ Shuffle Ready in " .. currentCountdown .. "s"
+        currentCountdown -= 1
+        task.wait(1)
+    end
+
+    shuffleCooldown = false
+    timerLabel.Text = "✔ Ready to Shuffle"
+end
+
+-- Freeze Sprinklers
+local function freezeSprinklers()
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and string.find(string.lower(obj.Name), "sprinkler") then
+            if obj:FindFirstChild("lifetime") then
+                obj.lifetime.Value = 999999
+            end
+        end
+    end
+end
+
+-- UI
+local function createUI()
+    gui = Instance.new("ScreenGui", PlayerGui)
+    gui.Name = "XScriptsUI"
+
+    local mainFrame = Instance.new("Frame", gui)
+    mainFrame.Size = UDim2.new(0, 400, 0, 220)
+    mainFrame.Position = UDim2.new(0.5, -200, 0.5, -110)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Active = true
+    mainFrame.Draggable = true
+    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
+
+    local title = Instance.new("TextLabel", mainFrame)
+    title.Size = UDim2.new(1, 0, 0, 40)
+    title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.GothamBold
+    title.TextScaled = true
+    title.Text = "XScripts Control Hub"
+    Instance.new("UICorner", title).CornerRadius = UDim.new(0, 12)
+
+    timerLabel = Instance.new("TextLabel", mainFrame)
+    timerLabel.Size = UDim2.new(1, -20, 0, 35)
+    timerLabel.Position = UDim2.new(0, 10, 0, 50)
+    timerLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    timerLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    timerLabel.Font = Enum.Font.Gotham
+    timerLabel.TextScaled = true
+    timerLabel.Text = "✔ Ready to Shuffle"
+    Instance.new("UICorner", timerLabel).CornerRadius = UDim.new(0, 8)
+
+    local shuffleButton = Instance.new("TextButton", mainFrame)
+    shuffleButton.Size = UDim2.new(0.9, 0, 0, 45)
+    shuffleButton.Position = UDim2.new(0.05, 0, 0, 100)
+    shuffleButton.BackgroundColor3 = Color3.fromRGB(50, 120, 255)
+    shuffleButton.TextColor3 = Color3.new(1, 1, 1)
+    shuffleButton.Font = Enum.Font.GothamBold
+    shuffleButton.TextScaled = true
+    shuffleButton.Text = "Shuffle Pets"
+    Instance.new("UICorner", shuffleButton).CornerRadius = UDim.new(0, 8)
+
+    local sprinklerButton = Instance.new("TextButton", mainFrame)
+    sprinklerButton.Size = UDim2.new(0.9, 0, 0, 45)
+    sprinklerButton.Position = UDim2.new(0.05, 0, 0, 155)
+    sprinklerButton.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
+    sprinklerButton.TextColor3 = Color3.new(1, 1, 1)
+    sprinklerButton.Font = Enum.Font.GothamBold
+    sprinklerButton.TextScaled = true
+    sprinklerButton.Text = "Freeze Sprinklers"
+    Instance.new("UICorner", sprinklerButton).CornerRadius = UDim.new(0, 8)
+
+    shuffleButton.MouseButton1Click:Connect(startCooldown)
+    sprinklerButton.MouseButton1Click:Connect(freezeSprinklers)
+end
+
+-- Toggle
+local toggleGui = Instance.new("ScreenGui", PlayerGui)
+local toggleButton = Instance.new("TextButton", toggleGui)
+toggleButton.Size = UDim2.new(0, 160, 0, 40)
+toggleButton.Position = UDim2.new(1, -180, 0.4, 0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextScaled = true
+toggleButton.Text = "Toggle Hub"
+Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 8)
+
+toggleButton.MouseButton1Click:Connect(function()
+    systemRunning = not systemRunning
+    if not gui then createUI() end
+    gui.Enabled = systemRunning
+    if systemRunning then
+        scanEggs()
+    end
+end)
 -- Shuffle Pets
 local function startCooldown()
     if shuffleCooldown then return end
