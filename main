@@ -1,539 +1,139 @@
--- Egg Refresher GUI with Smooth Minimize (Black + Orange Theme)
-
+-- Egg Refresher GUI (Orange + Black 4x4)
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
-local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Vars
-local gui, mainFrame, titleBar, minimized, timerLabel
-local cooldownTime, shuffleCooldown, currentCountdown = 30, false, 0
-local eggCache = {}
+local gui = nil
+local minimized = false
+local timerLabel
 
--- Full Pet Lists
-local PetLists = {
-    ["Common Egg"] = { "Dog", "Golden Lab", "Bunny" },
-    ["Mythical Egg"] = { "Grey Mouse", "Brown Mouse", "Squirrel", "Red Giant Ant" },
-    ["Bug Egg"] = { "Caterpillar", "Snail", "Giant Ant", "Praying Mantis" },
-    ["Common Summer Egg"] = { "Starfish", "Seagull", "Crab" },
-    ["Rare Summer Egg"] = { "Flamingo", "Toucan", "Sea Turtle", "Orangutan", "Seal" },
-    ["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara", "Scarlet Macaw" },
-    ["Bee Egg"] = { "Bee", "Honey Bee", "Bear Bee", "Petal Bee" },
-    ["Oasis Egg"] = { "Meerkat", "Sand Snake", "Axolotl", "Hyacinth Macaw" },
-    ["Anti Bee Egg"] = { "Wasp", "Tarantula Hawk", "Moth", "Butterfly" },
-    ["Night Egg"] = { "Frog", "Mole", "Hedgehog", "Night Owl", "Echo Frog" },
-    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "Pterodactyl", "Brontosaurus" },
-    ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki", "Tanchozuru", "Kappa" }
-}
-
--- Utility
-local function getRandomPet(list)
-    return list[math.random(1, #list)]
-end
-
--- Tag Egg
-local function tagEgg(part, eggName)
-    if eggCache[part] then return end
-    eggCache[part] = true
-
-    local bb = Instance.new("BillboardGui", part)
-    bb.Name = "EggLabel"
-    bb.Adornee = part
-    bb.Size = UDim2.new(0, 120, 0, 50)
-    bb.StudsOffset = Vector3.new(0, 2.5, 0)
-    bb.AlwaysOnTop = true
-
-    local eggText = Instance.new("TextLabel", bb)
-    eggText.Size = UDim2.new(1, 0, 0.5, 0)
-    eggText.BackgroundTransparency = 1
-    eggText.TextScaled = true
-    eggText.TextColor3 = Color3.fromRGB(255, 150, 0)
-    eggText.Font = Enum.Font.GothamBold
-    eggText.Text = eggName
-
-    local petText = Instance.new("TextLabel", bb)
-    petText.Name = "PetLabel"
-    petText.Size = UDim2.new(1, 0, 0.5, 0)
-    petText.Position = UDim2.new(0, 0, 0.5, 0)
-    petText.BackgroundTransparency = 1
-    petText.TextScaled = true
-    petText.TextColor3 = Color3.fromRGB(0, 200, 255)
-    petText.Font = Enum.Font.Gotham
-    petText.Text = getRandomPet(PetLists[eggName])
-end
-
--- Scan Eggs
-local function scanEggs()
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and PetLists[obj.Name] then
-            local part = obj:FindFirstChildWhichIsA("BasePart")
-            if part and not part:FindFirstChild("EggLabel") then
-                tagEgg(part, obj.Name)
-            end
-        end
-    end
-end
-
--- Shuffle Pets
+-- Dummy Functions (replace with your logic)
 local function startCooldown()
-    if shuffleCooldown then return end
-    shuffleCooldown = true
-    currentCountdown = cooldownTime
-
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and PetLists[obj.Name] then
-            local part = obj:FindFirstChildWhichIsA("BasePart")
-            if part then
-                local gui = part:FindFirstChild("EggLabel")
-                if gui and gui:FindFirstChild("PetLabel") then
-                    gui.PetLabel.Text = getRandomPet(PetLists[obj.Name])
-                    gui.PetLabel.TextColor3 = Color3.fromRGB(0, 200, 255)
-                end
-            end
-        end
+    if timerLabel then
+        timerLabel.Text = "🔄 Shuffling..."
+        task.wait(2)
+        timerLabel.Text = "✔ Shuffle Complete"
     end
-
-    while currentCountdown > 0 do
-        timerLabel.Text = "⏳ Shuffle Ready in " .. currentCountdown .. "s"
-        currentCountdown -= 1
-        task.wait(1)
-    end
-
-    shuffleCooldown = false
-    timerLabel.Text = "✅ Ready to Shuffle!"
 end
 
--- Freeze Trade
+local function freezeSprinklers()
+    if timerLabel then
+        timerLabel.Text = "❄ Sprinklers Frozen!"
+    end
+end
+
 local function freezeTrade()
-    local msg = Instance.new("TextLabel", gui)
-    msg.Size = UDim2.new(0, 220, 0, 35)
-    msg.Position = UDim2.new(0.5, -110, 0.5, -80)
-    msg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    msg.TextColor3 = Color3.fromRGB(255, 180, 0)
-    msg.Font = Enum.Font.GothamBold
-    msg.TextScaled = true
-    msg.Text = "⚠ Please Trade on someone"
-    Instance.new("UICorner", msg).CornerRadius = UDim.new(0, 6)
-    game:GetService("Debris"):AddItem(msg, 3)
+    if timerLabel then
+        timerLabel.Text = "🧊 Trade Frozen!"
+    end
 end
 
--- Create GUI
+-- Create UI
 local function createUI()
     gui = Instance.new("ScreenGui", PlayerGui)
     gui.Name = "EggRefresherUI"
 
-    mainFrame = Instance.new("Frame", gui)
-    mainFrame.Size = UDim2.new(0, 220, 0, 140)
-    mainFrame.Position = UDim2.new(0.5, -110, 0.5, -70)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    mainFrame.Active = true
-    mainFrame.Draggable = true
-    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
-
-    titleBar = Instance.new("Frame", mainFrame)
-    titleBar.Size = UDim2.new(1, 0, 0, 30)
-    titleBar.BackgroundColor3 = Color3.fromRGB(255, 120, 0)
-    Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 10)
-
-    local title = Instance.new("TextLabel", titleBar)
-    title.Size = UDim2.new(1, -30, 1, 0)
-    title.BackgroundTransparency = 1
-    title.TextColor3 = Color3.new(1, 1, 1)
-    title.Font = Enum.Font.GothamBold
-    title.TextScaled = true
-    title.Text = "🥚 Egg Refresher"
-
-    local minimizeButton = Instance.new("TextButton", titleBar)
-    minimizeButton.Size = UDim2.new(0, 30, 1, 0)
-    minimizeButton.Position = UDim2.new(1, -30, 0, 0)
-    minimizeButton.BackgroundColor3 = Color3.fromRGB(200, 80, 0)
-    minimizeButton.TextColor3 = Color3.new(1,1,1)
-    minimizeButton.Font = Enum.Font.GothamBold
-    minimizeButton.TextScaled = true
-    minimizeButton.Text = "-"
-    Instance.new("UICorner", minimizeButton).CornerRadius = UDim.new(0, 10)
-
-    timerLabel = Instance.new("TextLabel", mainFrame)
-    timerLabel.Size = UDim2.new(1, -10, 0, 25)
-    timerLabel.Position = UDim2.new(0, 5, 0, 35)
-    timerLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    timerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    timerLabel.Font = Enum.Font.Gotham
-    timerLabel.TextScaled = true
-    timerLabel.Text = "✅ Ready to Shuffle!"
-    Instance.new("UICorner", timerLabel).CornerRadius = UDim.new(0, 6)
-
-    local shuffleButton = Instance.new("TextButton", mainFrame)
-    shuffleButton.Size = UDim2.new(0.9, 0, 0, 30)
-    shuffleButton.Position = UDim2.new(0.05, 0, 0, 65)
-    shuffleButton.BackgroundColor3 = Color3.fromRGB(255, 120, 0)
-    shuffleButton.TextColor3 = Color3.new(1, 1, 1)
-    shuffleButton.Font = Enum.Font.GothamBold
-    shuffleButton.TextScaled = true
-    shuffleButton.Text = "🔁 Shuffle Pets"
-    Instance.new("UICorner", shuffleButton).CornerRadius = UDim.new(0, 6)
-
-    local tradeButton = Instance.new("TextButton", mainFrame)
-    tradeButton.Size = UDim2.new(0.9, 0, 0, 30)
-    tradeButton.Position = UDim2.new(0.05, 0, 0, 100)
-    tradeButton.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
-    tradeButton.TextColor3 = Color3.new(0, 0, 0)
-    tradeButton.Font = Enum.Font.GothamBold
-    tradeButton.TextScaled = true
-    tradeButton.Text = "❄ Freeze Trade"
-    Instance.new("UICorner", tradeButton).CornerRadius = UDim.new(0, 6)
-
-    -- Minimize toggle with Tween
-    minimizeButton.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        local goalSize = minimized and UDim2.new(0, 220, 0, 30) or UDim2.new(0, 220, 0, 140)
-        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = goalSize}):Play()
-
-        timerLabel.Visible = not minimized
-        shuffleButton.Visible = not minimized
-        tradeButton.Visible = not minimized
-    end)
-
-    shuffleButton.MouseButton1Click:Connect(startCooldown)
-    tradeButton.MouseButton1Click:Connect(freezeTrade)
-
-    scanEggs()
-end
-
--- Start GUI
-createUI()    label.Font = Enum.Font.GothamBlack
-    label.TextScaled = true
-    label.Text = "[ JACKPOT FOUND ]"
-    game:GetService("Debris"):AddItem(frame, 3)
-end
-
--- Shuffle Pets
-local function startCooldown()
-    if shuffleCooldown then return end
-    shuffleCooldown = true
-    currentCountdown = cooldownTime
-
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and PetLists[obj.Name] then
-            local part = obj:FindFirstChildWhichIsA("BasePart")
-            if part then
-                local gui = part:FindFirstChild("EggLabel")
-                if gui and gui:FindFirstChild("PetLabel") then
-                    local newPet = getRandomPet(PetLists[obj.Name])
-                    gui.PetLabel.Text = newPet
-                    if JackpotPets[newPet] then
-                        jackpotNotify()
-                        gui.PetLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
-                    else
-                        gui.PetLabel.TextColor3 = Color3.fromRGB(0, 170, 255)
-                    end
-                end
-            end
-        end
-    end
-
-    while currentCountdown > 0 do
-        timerLabel.Text = "⏳ Shuffle Ready in " .. currentCountdown .. "s"
-        currentCountdown -= 1
-        task.wait(1)
-    end
-
-    shuffleCooldown = false
-    timerLabel.Text = "✔ Ready to Shuffle"
-end
-
--- Freeze Sprinklers
-local function freezeSprinklers()
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and string.find(string.lower(obj.Name), "sprinkler") then
-            if obj:FindFirstChild("lifetime") then
-                obj.lifetime.Value = 999999
-            end
-        end
-    end
-end
-
--- UI
-local function createUI()
-    gui = Instance.new("ScreenGui", PlayerGui)
-    gui.Name = "XScriptsUI"
-
+    -- Main Frame
     local mainFrame = Instance.new("Frame", gui)
-    mainFrame.Size = UDim2.new(0, 400, 0, 220)
-    mainFrame.Position = UDim2.new(0.5, -200, 0.5, -110)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    mainFrame.Size = UDim2.new(0, 400, 0, 300)
+    mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     mainFrame.BorderSizePixel = 0
     mainFrame.Active = true
     mainFrame.Draggable = true
     Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
 
-    local title = Instance.new("TextLabel", mainFrame)
-    title.Size = UDim2.new(1, 0, 0, 40)
-    title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    -- Title Bar
+    local titleBar = Instance.new("Frame", mainFrame)
+    titleBar.Size = UDim2.new(1, 0, 0, 40)
+    titleBar.BackgroundColor3 = Color3.fromRGB(255, 120, 0)
+    Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 12)
+
+    local title = Instance.new("TextLabel", titleBar)
+    title.Size = UDim2.new(1, -40, 1, 0)
+    title.Position = UDim2.new(0, 10, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = "🥚 Egg Refresher"
     title.Font = Enum.Font.GothamBold
     title.TextScaled = true
-    title.Text = "XScripts Control Hub"
-    Instance.new("UICorner", title).CornerRadius = UDim.new(0, 12)
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
 
-    timerLabel = Instance.new("TextLabel", mainFrame)
-    timerLabel.Size = UDim2.new(1, -20, 0, 35)
-    timerLabel.Position = UDim2.new(0, 10, 0, 50)
+    -- Minimize Button ("-")
+    local minimizeButton = Instance.new("TextButton", titleBar)
+    minimizeButton.Size = UDim2.new(0, 40, 1, 0)
+    minimizeButton.Position = UDim2.new(1, -40, 0, 0)
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(200, 100, 0)
+    minimizeButton.Text = "-"
+    minimizeButton.Font = Enum.Font.GothamBold
+    minimizeButton.TextScaled = true
+    minimizeButton.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", minimizeButton).CornerRadius = UDim.new(0, 12)
+
+    -- 4x4 Grid Layout
+    local gridHolder = Instance.new("Frame", mainFrame)
+    gridHolder.Size = UDim2.new(1, -20, 1, -60)
+    gridHolder.Position = UDim2.new(0, 10, 0, 50)
+    gridHolder.BackgroundTransparency = 1
+
+    local grid = Instance.new("UIGridLayout", gridHolder)
+    grid.CellSize = UDim2.new(0, 90, 0, 60)
+    grid.CellPadding = UDim2.new(0, 5, 0, 5)
+    grid.FillDirectionMaxCells = 4
+    grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    grid.VerticalAlignment = Enum.VerticalAlignment.Top
+    grid.SortOrder = Enum.SortOrder.LayoutOrder
+
+    -- Timer Label
+    timerLabel = Instance.new("TextLabel", gridHolder)
     timerLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    timerLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    timerLabel.Font = Enum.Font.Gotham
+    timerLabel.TextColor3 = Color3.fromRGB(255, 180, 0)
+    timerLabel.Font = Enum.Font.GothamBold
     timerLabel.TextScaled = true
     timerLabel.Text = "✔ Ready to Shuffle"
     Instance.new("UICorner", timerLabel).CornerRadius = UDim.new(0, 8)
 
-    local shuffleButton = Instance.new("TextButton", mainFrame)
-    shuffleButton.Size = UDim2.new(0.9, 0, 0, 45)
-    shuffleButton.Position = UDim2.new(0.05, 0, 0, 100)
-    shuffleButton.BackgroundColor3 = Color3.fromRGB(50, 120, 255)
-    shuffleButton.TextColor3 = Color3.new(1, 1, 1)
+    -- Shuffle Button
+    local shuffleButton = Instance.new("TextButton", gridHolder)
+    shuffleButton.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
+    shuffleButton.Text = "🔁 Shuffle Pets"
     shuffleButton.Font = Enum.Font.GothamBold
     shuffleButton.TextScaled = true
-    shuffleButton.Text = "Shuffle Pets"
+    shuffleButton.TextColor3 = Color3.new(1, 1, 1)
     Instance.new("UICorner", shuffleButton).CornerRadius = UDim.new(0, 8)
+    shuffleButton.MouseButton1Click:Connect(startCooldown)
 
-    local sprinklerButton = Instance.new("TextButton", mainFrame)
-    sprinklerButton.Size = UDim2.new(0.9, 0, 0, 45)
-    sprinklerButton.Position = UDim2.new(0.05, 0, 0, 155)
-    sprinklerButton.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
-    sprinklerButton.TextColor3 = Color3.new(1, 1, 1)
+    -- Freeze Sprinklers Button
+    local sprinklerButton = Instance.new("TextButton", gridHolder)
+    sprinklerButton.BackgroundColor3 = Color3.fromRGB(255, 140, 40)
+    sprinklerButton.Text = "💧 Freeze Sprinklers"
     sprinklerButton.Font = Enum.Font.GothamBold
     sprinklerButton.TextScaled = true
-    sprinklerButton.Text = "Freeze Sprinklers"
-    Instance.new("UICorner", sprinklerButton).CornerRadius = UDim.new(0, 8)
-
-    shuffleButton.MouseButton1Click:Connect(startCooldown)
-    sprinklerButton.MouseButton1Click:Connect(freezeSprinklers)
-end
-
--- Toggle
-local toggleGui = Instance.new("ScreenGui", PlayerGui)
-local toggleButton = Instance.new("TextButton", toggleGui)
-toggleButton.Size = UDim2.new(0, 160, 0, 40)
-toggleButton.Position = UDim2.new(1, -180, 0.4, 0)
-toggleButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleButton.Font = Enum.Font.GothamBold
-toggleButton.TextScaled = true
-toggleButton.Text = "Toggle Hub"
-Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 8)
-
-toggleButton.MouseButton1Click:Connect(function()
-    systemRunning = not systemRunning
-    if not gui then createUI() end
-    gui.Enabled = systemRunning
-    if systemRunning then
-        scanEggs()
-    end
-end)
--- Shuffle Pets
-local function startCooldown()
-    if shuffleCooldown then return end
-    shuffleCooldown = true
-    currentCountdown = cooldownTime
-
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and PetLists[obj.Name] then
-            local part = obj:FindFirstChildWhichIsA("BasePart")
-            if part then
-                local gui = part:FindFirstChild("EggLabel")
-                if gui and gui:FindFirstChild("PetLabel") then
-                    local newPet = getRandomPet(PetLists[obj.Name])
-                    gui.PetLabel.Text = newPet
-                    if JackpotPets[newPet] then
-                        jackpotNotify()
-                    else
-                        gui.PetLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
-                    end
-                end
-            end
-        end
-    end
-
-    while currentCountdown > 0 do
-        timerLabel.Text = "⏳ " .. currentCountdown .. "s before you can shuffle again"
-        currentCountdown -= 1
-        task.wait(1)
-    end
-
-    shuffleCooldown = false
-    timerLabel.Text = "✅ Ready to Shuffle!"
-end
-
--- Freeze Sprinklers
-local function freezeSprinklers()
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and string.find(string.lower(obj.Name), "sprinkler") then
-            if obj:FindFirstChild("lifetime") then
-                obj.lifetime.Value = 999999
-            end
-        end
-    end
-end
-
--- Create Box UI
-local function createUI()
-    gui = Instance.new("ScreenGui", PlayerGui)
-    gui.Name = "XScriptsUI"
-
-    local mainFrame = Instance.new("Frame", gui)
-    mainFrame.Size = UDim2.new(0, 420, 0, 250)
-    mainFrame.Position = UDim2.new(0.5, -210, 0.5, -125)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    mainFrame.Active = true
-    mainFrame.Draggable = true
-    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 15)
-
-    local title = Instance.new("TextLabel", mainFrame)
-    title.Size = UDim2.new(1, 0, 0, 40)
-    title.BackgroundColor3 = Color3.fromRGB(50, 0, 120)
-    title.TextColor3 = Color3.new(1,1,1)
-    title.Text = "🐣 XScripts Control Hub"
-    title.Font = Enum.Font.FredokaOne
-    title.TextScaled = true
-    Instance.new("UICorner", title).CornerRadius = UDim.new(0, 15)
-
-    timerLabel = Instance.new("TextLabel", mainFrame)
-    timerLabel.Size = UDim2.new(1, -20, 0, 40)
-    timerLabel.Position = UDim2.new(0, 10, 0, 60)
-    timerLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    timerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    timerLabel.Font = Enum.Font.FredokaOne
-    timerLabel.TextScaled = true
-    timerLabel.Text = "✅ Ready to Shuffle!"
-    Instance.new("UICorner", timerLabel).CornerRadius = UDim.new(0, 10)
-
-    local shuffleButton = Instance.new("TextButton", mainFrame)
-    shuffleButton.Size = UDim2.new(0.9, 0, 0, 45)
-    shuffleButton.Position = UDim2.new(0.05, 0, 0, 110)
-    shuffleButton.BackgroundColor3 = Color3.fromRGB(85, 0, 255)
-    shuffleButton.TextColor3 = Color3.new(1, 1, 1)
-    shuffleButton.Font = Enum.Font.FredokaOne
-    shuffleButton.TextScaled = true
-    shuffleButton.Text = "🔁 Shuffle Pets"
-    Instance.new("UICorner", shuffleButton).CornerRadius = UDim.new(0, 10)
-
-    local sprinklerButton = Instance.new("TextButton", mainFrame)
-    sprinklerButton.Size = UDim2.new(0.9, 0, 0, 45)
-    sprinklerButton.Position = UDim2.new(0.05, 0, 0, 170)
-    sprinklerButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
     sprinklerButton.TextColor3 = Color3.new(1, 1, 1)
-    sprinklerButton.Font = Enum.Font.FredokaOne
-    sprinklerButton.TextScaled = true
-    sprinklerButton.Text = "💧 Freeze Sprinklers"
-    Instance.new("UICorner", sprinklerButton).CornerRadius = UDim.new(0, 10)
-
-    shuffleButton.MouseButton1Click:Connect(startCooldown)
+    Instance.new("UICorner", sprinklerButton).CornerRadius = UDim.new(0, 8)
     sprinklerButton.MouseButton1Click:Connect(freezeSprinklers)
-end
 
--- Toggle GUI
-local toggleGui = Instance.new("ScreenGui", PlayerGui)
-local toggleButton = Instance.new("TextButton", toggleGui)
-toggleButton.Size = UDim2.new(0, 160, 0, 40)
-toggleButton.Position = UDim2.new(1, -180, 0.45, 0)
-toggleButton.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
-toggleButton.TextColor3 = Color3.new(1,1,1)
-toggleButton.Font = Enum.Font.FredokaOne
-toggleButton.TextScaled = true
-toggleButton.Text = "🐣 Toggle Hub"
-Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 12)
+    -- Freeze Trade Button
+    local tradeButton = Instance.new("TextButton", gridHolder)
+    tradeButton.BackgroundColor3 = Color3.fromRGB(255, 80, 20)
+    tradeButton.Text = "🧊 Freeze Trade"
+    tradeButton.Font = Enum.Font.GothamBold
+    tradeButton.TextScaled = true
+    tradeButton.TextColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", tradeButton).CornerRadius = UDim.new(0, 8)
+    tradeButton.MouseButton1Click:Connect(freezeTrade)
 
-toggleButton.MouseButton1Click:Connect(function()
-    systemRunning = not systemRunning
-    if not gui then createUI() end
-    gui.Enabled = systemRunning
-    if systemRunning then
-        scanEggs()
-    end
-end)
--- Replace Pets (Visual Only)
-local function startCooldown(button)
-    if shuffleCooldown then return end
-    shuffleCooldown = true
-    currentCountdown = cooldownTime
-
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and PetLists[obj.Name] then
-            local part = obj:FindFirstChildWhichIsA("BasePart")
-            if part then
-                local gui = part:FindFirstChild("EggLabel")
-                if gui and gui:FindFirstChild("PetLabel") then
-                    local newPet = getRandomPet(PetLists[obj.Name])
-                    gui.PetLabel.Text = newPet
-                    if JackpotPets[newPet] then
-                        jackpotNotify()
-                    else
-                        gui.PetLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
-                    end
-                end
+    -- Minimize Function
+    minimizeButton.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        for _, child in ipairs(mainFrame:GetChildren()) do
+            if child ~= titleBar then
+                child.Visible = not minimized
             end
         end
-    end
-
-    while currentCountdown > 0 do
-        timerLabel.Text = "⏳ " .. currentCountdown .. "s before you can shuffle again"
-        currentCountdown -= 1
-        task.wait(1)
-    end
-
-    shuffleCooldown = false
-    timerLabel.Text = "✅ Ready to Shuffle!"
-end
-
--- Create Modern UI
-local function createUI()
-    gui = Instance.new("ScreenGui", PlayerGui)
-    gui.Name = "PetReplaceUI"
-
-    timerLabel = Instance.new("TextLabel", gui)
-    timerLabel.Size = UDim2.new(0, 420, 0, 40)
-    timerLabel.Position = UDim2.new(0.5, -210, 1, -100)
-    timerLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    timerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    timerLabel.Font = Enum.Font.FredokaOne
-    timerLabel.TextScaled = true
-    timerLabel.Text = "✅ Ready to Shuffle!"
-    Instance.new("UICorner", timerLabel).CornerRadius = UDim.new(0, 10)
-
-    local button = Instance.new("TextButton", gui)
-    button.Size = UDim2.new(0, 280, 0, 45)
-    button.Position = UDim2.new(0.5, -140, 1, -50)
-    button.BackgroundColor3 = Color3.fromRGB(85, 0, 255)
-    button.TextColor3 = Color3.new(1, 1, 1)
-    button.Font = Enum.Font.FredokaOne
-    button.TextScaled = true
-    button.Text = "🔁 Shuffle Pet in Egg"
-    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 10)
-
-    button.MouseButton1Click:Connect(function()
-        startCooldown(button)
     end)
 end
 
--- Toggle
-local toggleGui = Instance.new("ScreenGui", PlayerGui)
-local toggleButton = Instance.new("TextButton", toggleGui)
-toggleButton.Size = UDim2.new(0, 140, 0, 40)
-toggleButton.Position = UDim2.new(1, -160, 0.45, 0)
-toggleButton.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
-toggleButton.TextColor3 = Color3.new(1,1,1)
-toggleButton.Font = Enum.Font.FredokaOne
-toggleButton.TextScaled = true
-toggleButton.Text = "🐣 Pet Detector"
-Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 12)
-
-toggleButton.MouseButton1Click:Connect(function()
-    systemRunning = not systemRunning
-    if not gui then createUI() end
-    gui.Enabled = systemRunning
-    if systemRunning then
-        scanEggs()
-    end
-end)
+-- Initialize GUI
+createUI()
