@@ -1,4 +1,4 @@
--- Egg Refresher GUI (Orange + Black 4x4)
+-- XScripts 🥚 Enhanced Egg ESP + Pet Replace + Jackpot + Sprinkler Freeze 🎉
 
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -6,101 +6,202 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-local gui = nil
+-- Cache Eggs
+local eggCache = {}
+
+-- Pet Lists
+local PetLists = {
+    ["Common Egg"] = { "Dog", "Golden Lab", "Bunny" },
+    ["Mythical Egg"] = { "Grey Mouse", "Brown Mouse", "Squirrel", "Red Giant Ant" },
+    ["Bug Egg"] = { "Caterpillar", "Snail", "Giant Ant", "Praying Mantis" },
+    ["Common Summer Egg"] = { "Starfish", "Seagull", "Crab" },
+    ["Rare Summer Egg"] = { "Flamingo", "Toucan", "Sea Turtle", "Orangutan", "Seal" },
+    ["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara", "Scarlet Macaw" },
+    ["Bee Egg"] = { "Bee", "Honey Bee", "Bear Bee", "Petal Bee" },
+    ["Oasis Egg"] = { "Meerkat", "Sand Snake", "Axolotl", "Hyacinth Macaw" },
+    ["Anti Bee Egg"] = { "Wasp", "Tarantula Hawk", "Moth", "Butterfly" },
+    ["Night Egg"] = { "Frog", "Mole", "Hedgehog", "Night Owl", "Echo Frog" },
+    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "Pterodactyl", "Brontosaurus" },
+    ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki", "Tanchozuru", "Kappa" }
+}
+
+-- Jackpot Pets
+local JackpotPets = {
+    ["Raccoon"] = true, ["Red Fox"] = true, ["Dragonfly"] = true,
+    ["Mimic Octopus"] = true, ["Queen Bee"] = true, ["Fennec Fox"] = true,
+    ["Butterfly"] = true, ["Disco Bee"] = true, ["T-Rex"] = true, ["Kitsune"] = true
+}
+
+-- Cooldown Variables
+local cooldownTime = 30
+local shuffleCooldown = false
+local currentCountdown = 0
 local systemRunning = false
-local minimized = false
+local gui = nil
 local timerLabel
 
--- Create UI
-local function createUI()
-    gui = Instance.new("ScreenGui", PlayerGui)
-    gui.Name = "EggRefresherUI"
+-- Utility
+local function getRandomPet(list)
+    return list[math.random(1, #list)]
+end
 
-    -- Main Frame
-    local mainFrame = Instance.new("Frame", gui)
-    mainFrame.Size = UDim2.new(0, 400, 0, 300)
-    mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    mainFrame.BorderSizePixel = 0
-    mainFrame.Active = true
-    mainFrame.Draggable = true
-    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
+-- Tag Eggs
+local function tagEgg(part, eggName)
+    if eggCache[part] then return end
+    eggCache[part] = true
 
-    -- Title Bar
-    local titleBar = Instance.new("Frame", mainFrame)
-    titleBar.Size = UDim2.new(1, 0, 0, 40)
-    titleBar.BackgroundColor3 = Color3.fromRGB(255, 120, 0)
-    Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 12)
+    local bb = Instance.new("BillboardGui", part)
+    bb.Name = "EggLabel"
+    bb.Adornee = part
+    bb.Size = UDim2.new(0, 150, 0, 80)
+    bb.StudsOffset = Vector3.new(0, 3, 0)
+    bb.AlwaysOnTop = true
 
-    local title = Instance.new("TextLabel", titleBar)
-    title.Size = UDim2.new(1, -40, 1, 0)
-    title.Position = UDim2.new(0, 10, 0, 0)
-    title.BackgroundTransparency = 1
-    title.Text = "🥚 Egg Refresher"
-    title.Font = Enum.Font.GothamBold
-    title.TextScaled = true
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    local eggText = Instance.new("TextLabel", bb)
+    eggText.Size = UDim2.new(1, 0, 0.33, 0)
+    eggText.BackgroundTransparency = 1
+    eggText.TextScaled = true
+    eggText.TextColor3 = Color3.fromRGB(255, 255, 0)
+    eggText.Font = Enum.Font.FredokaOne
+    eggText.Text = eggName
 
-    -- Minimize Button ("-")
-    local minimizeButton = Instance.new("TextButton", titleBar)
-    minimizeButton.Size = UDim2.new(0, 40, 1, 0)
-    minimizeButton.Position = UDim2.new(1, -40, 0, 0)
-    minimizeButton.BackgroundColor3 = Color3.fromRGB(200, 100, 0)
-    minimizeButton.Text = "-"
-    minimizeButton.Font = Enum.Font.GothamBold
-    minimizeButton.TextScaled = true
-    minimizeButton.TextColor3 = Color3.new(1,1,1)
-    Instance.new("UICorner", minimizeButton).CornerRadius = UDim.new(0, 12)
+    local petText = Instance.new("TextLabel", bb)
+    petText.Name = "PetLabel"
+    petText.Size = UDim2.new(1, 0, 0.33, 0)
+    petText.Position = UDim2.new(0, 0, 0.33, 0)
+    petText.BackgroundTransparency = 1
+    petText.TextScaled = true
+    petText.TextColor3 = Color3.fromRGB(0, 255, 255)
+    petText.Font = Enum.Font.FredokaOne
+    petText.Text = getRandomPet(PetLists[eggName])
+end
 
-    -- 4x4 Grid Layout
-    local grid = Instance.new("UIGridLayout", mainFrame)
-    grid.CellSize = UDim2.new(0, 90, 0, 60)
-    grid.CellPadding = UDim2.new(0, 5, 0, 5)
-    grid.FillDirectionMaxCells = 4
-    grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    grid.VerticalAlignment = Enum.VerticalAlignment.Center
-    grid.SortOrder = Enum.SortOrder.LayoutOrder
-    grid.Padding = UDim.new(0, 10)
-
-    -- Timer Label
-    timerLabel = Instance.new("TextLabel", mainFrame)
-    timerLabel.Size = UDim2.new(0, 380, 0, 40)
-    timerLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    timerLabel.TextColor3 = Color3.fromRGB(255, 180, 0)
-    timerLabel.Font = Enum.Font.GothamBold
-    timerLabel.TextScaled = true
-    timerLabel.Text = "✔ Ready to Shuffle"
-    Instance.new("UICorner", timerLabel).CornerRadius = UDim.new(0, 8)
-
-    -- Shuffle Button
-    local shuffleButton = Instance.new("TextButton", mainFrame)
-    shuffleButton.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
-    shuffleButton.Text = "🔁 Shuffle Pets"
-    shuffleButton.Font = Enum.Font.GothamBold
-    shuffleButton.TextScaled = true
-    shuffleButton.TextColor3 = Color3.new(1, 1, 1)
-    Instance.new("UICorner", shuffleButton).CornerRadius = UDim.new(0, 8)
-    shuffleButton.MouseButton1Click:Connect(startCooldown)
-
-    -- Freeze Sprinklers Button
-    local sprinklerButton = Instance.new("TextButton", mainFrame)
-    sprinklerButton.BackgroundColor3 = Color3.fromRGB(255, 140, 40)
-    sprinklerButton.Text = "💧 Freeze Sprinklers"
-    sprinklerButton.Font = Enum.Font.GothamBold
-    sprinklerButton.TextScaled = true
-    sprinklerButton.TextColor3 = Color3.new(1, 1, 1)
-    Instance.new("UICorner", sprinklerButton).CornerRadius = UDim.new(0, 8)
-    sprinklerButton.MouseButton1Click:Connect(freezeSprinklers)
-
-    -- Minimize Function
-    minimizeButton.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        for _, child in ipairs(mainFrame:GetChildren()) do
-            if child ~= titleBar then
-                child.Visible = not minimized
+-- Scan Eggs
+local function scanEggs()
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and PetLists[obj.Name] then
+            local part = obj:FindFirstChildWhichIsA("BasePart")
+            if part then
+                tagEgg(part, obj.Name)
             end
         end
-    end)
+    end
+end
+
+-- Jackpot Notify
+local function jackpotNotify()
+    local label = Instance.new("TextLabel", PlayerGui)
+    label.Size = UDim2.new(0, 350, 0, 60)
+    label.Position = UDim2.new(0.5, -175, 0.5, -120)
+    label.AnchorPoint = Vector2.new(0.5, 0.5)
+    label.BackgroundColor3 = Color3.fromRGB(255, 223, 0)
+    label.TextColor3 = Color3.new(0,0,0)
+    label.Text = "🎉 JACKPOT PET FOUND 🎉"
+    label.Font = Enum.Font.FredokaOne
+    label.TextScaled = true
+    Instance.new("UICorner", label).CornerRadius = UDim.new(0,12)
+    game:GetService("Debris"):AddItem(label, 3)
+end
+
+-- Shuffle Pets
+local function startCooldown()
+    if shuffleCooldown then return end
+    shuffleCooldown = true
+    currentCountdown = cooldownTime
+
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and PetLists[obj.Name] then
+            local part = obj:FindFirstChildWhichIsA("BasePart")
+            if part then
+                local gui = part:FindFirstChild("EggLabel")
+                if gui and gui:FindFirstChild("PetLabel") then
+                    local newPet = getRandomPet(PetLists[obj.Name])
+                    gui.PetLabel.Text = newPet
+                    if JackpotPets[newPet] then
+                        jackpotNotify()
+                    else
+                        gui.PetLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+                    end
+                end
+            end
+        end
+    end
+
+    while currentCountdown > 0 do
+        timerLabel.Text = "⏳ " .. currentCountdown .. "s before you can shuffle again"
+        currentCountdown -= 1
+        task.wait(1)
+    end
+
+    shuffleCooldown = false
+    timerLabel.Text = "✅ Ready to Shuffle!"
+end
+
+-- Freeze Sprinklers
+local function freezeSprinklers()
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and string.find(string.lower(obj.Name), "sprinkler") then
+            if obj:FindFirstChild("lifetime") then
+                obj.lifetime.Value = 999999
+            end
+        end
+    end
+end
+
+-- Create Box UI
+local function createUI()
+    gui = Instance.new("ScreenGui", PlayerGui)
+    gui.Name = "XScriptsUI"
+
+    local mainFrame = Instance.new("Frame", gui)
+    mainFrame.Size = UDim2.new(0, 420, 0, 250)
+    mainFrame.Position = UDim2.new(0.5, -210, 0.5, -125)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    mainFrame.Active = true
+    mainFrame.Draggable = true
+    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 15)
+
+    local title = Instance.new("TextLabel", mainFrame)
+    title.Size = UDim2.new(1, 0, 0, 40)
+    title.BackgroundColor3 = Color3.fromRGB(50, 0, 120)
+    title.TextColor3 = Color3.new(1,1,1)
+    title.Text = "🐣 XScripts Control Hub"
+    title.Font = Enum.Font.FredokaOne
+    title.TextScaled = true
+    Instance.new("UICorner", title).CornerRadius = UDim.new(0, 15)
+
+    timerLabel = Instance.new("TextLabel", mainFrame)
+    timerLabel.Size = UDim2.new(1, -20, 0, 40)
+    timerLabel.Position = UDim2.new(0, 10, 0, 60)
+    timerLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    timerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    timerLabel.Font = Enum.Font.FredokaOne
+    timerLabel.TextScaled = true
+    timerLabel.Text = "✅ Ready to Shuffle!"
+    Instance.new("UICorner", timerLabel).CornerRadius = UDim.new(0, 10)
+
+    local shuffleButton = Instance.new("TextButton", mainFrame)
+    shuffleButton.Size = UDim2.new(0.9, 0, 0, 45)
+    shuffleButton.Position = UDim2.new(0.05, 0, 0, 110)
+    shuffleButton.BackgroundColor3 = Color3.fromRGB(85, 0, 255)
+    shuffleButton.TextColor3 = Color3.new(1, 1, 1)
+    shuffleButton.Font = Enum.Font.FredokaOne
+    shuffleButton.TextScaled = true
+    shuffleButton.Text = "🔁 Shuffle Pets"
+    Instance.new("UICorner", shuffleButton).CornerRadius = UDim.new(0, 10)
+
+    local sprinklerButton = Instance.new("TextButton", mainFrame)
+    sprinklerButton.Size = UDim2.new(0.9, 0, 0, 45)
+    sprinklerButton.Position = UDim2.new(0.05, 0, 0, 170)
+    sprinklerButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+    sprinklerButton.TextColor3 = Color3.new(1, 1, 1)
+    sprinklerButton.Font = Enum.Font.FredokaOne
+    sprinklerButton.TextScaled = true
+    sprinklerButton.Text = "💧 Freeze Sprinklers"
+    Instance.new("UICorner", sprinklerButton).CornerRadius = UDim.new(0, 10)
+
+    shuffleButton.MouseButton1Click:Connect(startCooldown)
+    sprinklerButton.MouseButton1Click:Connect(freezeSprinklers)
 end
 
 -- Toggle GUI
@@ -108,11 +209,11 @@ local toggleGui = Instance.new("ScreenGui", PlayerGui)
 local toggleButton = Instance.new("TextButton", toggleGui)
 toggleButton.Size = UDim2.new(0, 160, 0, 40)
 toggleButton.Position = UDim2.new(1, -180, 0.45, 0)
-toggleButton.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
 toggleButton.TextColor3 = Color3.new(1,1,1)
-toggleButton.Font = Enum.Font.GothamBold
+toggleButton.Font = Enum.Font.FredokaOne
 toggleButton.TextScaled = true
-toggleButton.Text = "🥚 Toggle Hub"
+toggleButton.Text = "🐣 Toggle Hub"
 Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 12)
 
 toggleButton.MouseButton1Click:Connect(function()
